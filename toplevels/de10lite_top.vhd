@@ -119,6 +119,7 @@ architecture RTL of de10lite_top is
 
 	signal uart_rxd : std_logic;
 	signal uart_txd : std_logic;
+	signal intercept : std_logic;
 
 COMPONENT c16_guest
 	PORT
@@ -260,8 +261,8 @@ guest: COMPONENT c16_guest
 		VGA_B => vga_blue(7 downto 2),
 		AUDIO_L => sigma_l,
 		AUDIO_R => sigma_r,
-		PS2CLK => ps2_keyboard_clk_in,
-		PS2DAT => ps2_keyboard_dat_in
+		PS2CLK => ps2_keyboard_clk_in or intercept,
+		PS2DAT => ps2_keyboard_dat_in or intercept
 );
 
 -- Pass internal signals to external SPI interface
@@ -303,7 +304,8 @@ controller : entity work.substitute_mcu
 
 		-- UART
 		rxd => rs232_rxd,
-		txd => rs232_txd
+		txd => rs232_txd,
+		intercept => intercept
 );
 
 

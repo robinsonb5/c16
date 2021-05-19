@@ -25,8 +25,10 @@
 // 1.0	first release
 //
 //////////////////////////////////////////////////////////////////////////////////
+
 module c16_keymatrix(
 	 input clk,
+    input [64:0] keys,
     input [7:0] scancode,
     input receiveflag,
 	 input [7:0] row,
@@ -169,6 +171,50 @@ always @(posedge clk)
 	colsel[7]<=(key_AT & rowsel[0]) | (key_shift & rowsel[1]) | (key_X & rowsel[2]) | (key_V & rowsel[3]) | (key_N & rowsel[4]) | (key_comma & rowsel[5]) | (key_slash & rowsel[6]) | (key_runstop & rowsel[7]);
 	end
 
-assign kbus=~colsel;
+// AMR - Add scanning of real C64 keyboard on Chameleon64 platforms.
+
+// Note, there are some subtle differences between the C16 and C64 key matrix which
+// we must account for on Chameleon.
+
+// On C64 the two shift keys are separate.  On C16 both shift keys map to a single bit.
+// keys(38) is right shift on C64, but Esc on C16
+// keys(57) is left shift
+
+// On C64 the restore key is an NMI key outside the usual matrix.  On C16 this is a clr/home key
+// keys(64) is the nmi key (momentary pulses only, widened in the toplevel)
+// keys(15) is the "<-" C64 key which carries the Clr/Home key's signal.
+// (The physical location is occupied by Esc, which occupies the vacant Right Shift slot on C16)
+
+// Mapping is thus:
+// c16(57) <= c64(57) and c64(38); // Map both shift keys onto one
+// c16(38) <= c64(15); // Map "<-" to Esc
+// c16(15) <= c64(64); // Map Restore to Clr/Home
+
+wire [63:0] keys_remapped;
+wire [7:0] realkeys[8];
+reg [7:0] realkeys_reg;
+
+assign keys_remapped[63:58] = keys[63:58];
+assign keys_remapped[57] = keys[57]&keys[38];
+assign keys_remapped[56:39] = keys[56:39];
+assign keys_remapped[38] = keys[15];
+assign keys_remapped[37:16] = keys[37:16];
+assign keys_remapped[15] = keys[64];
+assign keys_remapped[14:0] = keys[14:0];
+
+always @(posedge clk)
+	realkeys_reg <= realkeys[0] & realkeys[1] & realkeys[2] & realkeys[3]
+	& realkeys[4] & realkeys[5] & realkeys[6] & realkeys[7];
+	
+genvar i,j;
+generate	
+	for(i=0;i<8;i=i+1) begin: remapkeys
+		for(j=0;j<8;j=j+1) begin: remapkeysinner
+			assign realkeys[i][j]=rowsel[i] ? keys_remapped[j*8+i] : 1'b1;
+		end
+	end
+endgenerate
+
+assign kbus=(~colsel)&realkeys_reg;
 
 endmodule

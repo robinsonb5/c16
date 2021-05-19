@@ -14,6 +14,20 @@
 // 2nd order variant with low-pass input filter and high-pass feedback filter.
 // Copyright 2021 by Alastair M. Robinson
 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that they will
+// be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+// of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>
+//
+
 
 module hybrid_pwm_sd_2ndorder #(parameter signalwidth=16, parameter filtersize=4)
 (
@@ -79,7 +93,7 @@ iirfilter_stereo # (.signalwidth(signalwidth),.cbits(filtersize),.immediate(0)) 
 wire [signalwidth-1:0] outfiltered_l;
 wire [signalwidth-1:0] outfiltered_r;
 
-iirfilter_stereo # (.cbits(9),.immediate(1)) outputfilter
+iirfilter_stereo # (.signalwidth(signalwidth),.cbits(9),.immediate(1)) outputfilter
 (
 	.clk(clk),
 	.reset_n(reset_n),
@@ -206,7 +220,8 @@ module iirfilter_mono #
 (
 	parameter signalwidth = 16,
 	parameter cbits = 5,	// Bits for coefficient (default 1/32)
-	parameter immediate = 0
+	parameter immediate = 0,
+	parameter powerup = 1
 )
 (
 	input clk,
@@ -216,7 +231,7 @@ module iirfilter_mono #
 	output [signalwidth-1:0] q
 );
 
-reg [signalwidth+cbits-1:0] acc = {{signalwidth{1'b1}},{cbits{1'b0}}};
+reg [signalwidth+cbits-1:0] acc = {powerup ? {signalwidth{1'b1}} : {signalwidth{1'b0}} , {cbits{1'b0}}};
 wire [signalwidth+cbits-1:0] acc_new;
 
 wire [signalwidth+cbits:0] delta = {d,{cbits{1'b0}}} - acc;
@@ -227,7 +242,7 @@ always @(posedge clk, negedge reset_n)
 begin
 	if(!reset_n)
 	begin
-		acc[signalwidth+cbits-1:0]<={{signalwidth{1'b1}},{cbits{1'b0}}};
+		acc[signalwidth+cbits-1:0]<={powerup ? {signalwidth{1'b1}} : {signalwidth{1'b0}} , {cbits{1'b0}}};
 	end
 	else if(ena)
 		acc <= acc_new;

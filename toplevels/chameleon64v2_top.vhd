@@ -180,11 +180,14 @@ architecture rtl of chameleon64v2_top is
 	signal audio_r : std_logic_vector(15 downto 0);
 
 -- IO	
+	signal menu_db : std_logic;
 	signal power_button : std_logic;
 	signal play_button : std_logic;
 	signal c64_keys : unsigned(63 downto 0);
 	signal c64_restore_key_n : std_logic;
 	signal c64_nmi_n : std_logic;
+	signal c64_restore_ctr : unsigned(8 downto 0);
+	alias c64_restore_key : std_logic is c64_restore_ctr(8);
 	signal c64_joy1 : unsigned(6 downto 0);
 	signal c64_joy2 : unsigned(6 downto 0);
 	signal joystick3 : unsigned(6 downto 0);
@@ -214,7 +217,7 @@ architecture rtl of chameleon64v2_top is
 
 	-- Declare guest component, since it's written in systemverilog
 	
-	COMPONENT c16_mist
+	COMPONENT c16_guest
 		PORT
 		(
 			CLOCK_27 :	IN STD_LOGIC;
@@ -244,7 +247,11 @@ architecture rtl of chameleon64v2_top is
 			VGA_G		:	 OUT STD_LOGIC_VECTOR(5 DOWNTO 0);
 			VGA_B		:	 OUT STD_LOGIC_VECTOR(5 DOWNTO 0);
 			AUDIO_L  : out std_logic;
-			AUDIO_R  : out std_logic
+			AUDIO_R  : out std_logic;
+			PS2DAT : in std_logic;
+			PS2CLK : in std_logic;
+			c64_keys : in unsigned(64 downto 0);
+			tape_button_n : in std_logic
 		);
 	END COMPONENT;
 	
@@ -273,7 +280,9 @@ architecture rtl of chameleon64v2_top is
 	);
 	END COMPONENT;
 	signal act_led : std_logic;
-	
+
+	signal intercept : std_logic;
+
 begin
 
 -- -----------------------------------------------------------------------
@@ -434,8 +443,7 @@ begin
 				joystick3 => joystick3,
 				joystick4 => joystick4,
 				keys => c64_keys,
---				restore_key_n => restore_n
-				restore_key_n => open,
+				restore_key_n => c64_restore_key_n,
 				amiga_power_led => led_green,
 				amiga_drive_led => led_red,
 				amiga_reset_n => amiga_reset_n,
@@ -464,18 +472,23 @@ begin
 	keys_safe <= '1' when c64_joy1="1111111" else '0';
 
 	-- Update c64 keys only when the joystick isn't active.
-	process (clk_100)
-	begin
-		if rising_edge(clk_100) then
-			if keys_safe='1' then
-				gp1_run <= c64_keys(8); -- Return
-				gp1_select <= c64_keys(38); -- Right shift
-				gp2_run <= c64_keys(63); -- Run/stop
-				gp2_select <= c64_keys(57); -- Left shift;
-				c64_menu <= c64_keys(15); -- Left arrow;
-			end if;
-		end if;
-	end process;
+	gp1_run<='1';
+	gp2_run<='1';
+	gp1_select<='1';
+	gp2_select<='1';
+	c64_menu<='1';
+--	process (clk_100)
+--	begin
+--		if rising_edge(clk_100) then
+--			if keys_safe='1' then
+--				gp1_run <= c64_keys(8); -- Return
+--				gp1_select <= c64_keys(38); -- Right shift
+--				gp2_run <= c64_keys(63); -- Run/stop
+--				gp2_select <= c64_keys(57); -- Left shift;
+--				c64_menu <= c64_keys(15); -- Left arrow;
+--			end if;
+--		end if;
+--	end process;
 	
 	porta_start <= cdtv_port or ((not play_button) and gp1_run);
 	porta_select <= (cdtv_port or ((not vol_up) and gp1_select)) and c64_joy1(6);
@@ -499,7 +512,7 @@ begin
 	blu <= unsigned(vga_blue(7 downto 3));
 
 
-	guest: COMPONENT c16_mist
+	guest: COMPONENT c16_guest
 	PORT map
 	(
 		CLOCK_27 => clk50m,
@@ -532,9 +545,24 @@ begin
 		VGA_G => vga_green(7 downto 2),
 		VGA_B => vga_blue(7 downto 2),
 		AUDIO_L => sigma_l,
-		AUDIO_R => sigma_r
+		AUDIO_R => sigma_r,
+		PS2CLK => ps2_keyboard_clk_in or intercept,
+		PS2DAT => ps2_keyboard_dat_in or intercept,
+		c64_keys => c64_restore_key&c64_keys,
+		tape_button_n => freeze_btn and not play_button
 	);
 
+	-- Debounce the menu button
+	menudb : entity work.debounce
+	generic map (
+		bits => 16
+	)
+	port map (
+		clk => clk_50,
+		d => usart_cts,
+		q => menu_db
+	);
+	
 	-- Pass internal signals to external SPI interface
 	spi_clk <= spi_clk_int;
 
@@ -577,16 +605,17 @@ begin
 		-- buttons 1 and 2, respectively, with button 3 -> A and 4 -> start.
 		-- We remap them to START, A, A, B, C, so remap here
 
-		joy1 => std_logic_vector(joy1(7)&joy1(5)&joy1(4)&joy1(6)&joy1(3 downto 0)),
-		joy2 => std_logic_vector(joy2(7)&joy2(5)&joy2(4)&joy2(6)&joy2(3 downto 0)),
+		joy1 => std_logic_vector(joy1),
+		joy2 => std_logic_vector(joy2),
 		joy3 => std_logic_vector(joy3),
 		joy4 => std_logic_vector(joy4),
 
-		buttons => (0=>usart_cts and not power_button,others=>'0'),
+		buttons => (0=>menu_db and not power_button,others=>'0'),
 
 		-- UART
 		rxd => rs232_rxd,
-		txd => rs232_txd
+		txd => rs232_txd,
+		intercept => intercept
 	);
 
 pulseleds : COMPONENT throbber
@@ -599,6 +628,18 @@ PORT map
 
 led_red<=act_led and not spi_ss4;
 led_green<=(not act_led) and not spi_ss4;
+
+-- Widen the miniscule pulses from the C64 restore key, to make it useful.
+process(clk_100)
+begin
+	if rising_edge(clk_100) then
+		if ena_1khz='1' and c64_restore_ctr(8)='0' then
+			c64_restore_ctr<=c64_restore_ctr+1;
+		else
+			c64_restore_ctr(8)<=c64_restore_ctr(8) and c64_restore_key_n and nmi_in;
+		end if;
+	end if;
+end process;
 	
 end architecture;
 

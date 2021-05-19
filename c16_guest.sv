@@ -59,7 +59,9 @@ module c16_guest (
    input     UART_RX,
    output    UART_TX,
 	input PS2CLK,
-	input PS2DAT
+	input PS2DAT,
+	input [64:0] c64_keys,
+	input tape_button_n // Active low
 );
 
 // -------------------------------------------------------------------------
@@ -90,6 +92,8 @@ parameter CONF_STR = {
 
 localparam ROM_MEM_START = 25'h10000;
 localparam TAP_MEM_START = 25'h20000;
+
+localparam kernal_index= 8'h02; // Temporarily reduced to 2 until disks work
 
 reg uart_rxD;
 reg uart_rxD2;
@@ -188,7 +192,7 @@ wire [15:0] sdram_dout;
 wire [7:0] c16_din = zp_overwrite?zp_ovl_dout:
 	(c16_a_low[0]?sdram_dout[15:8]:sdram_dout[7:0]);
 
-assign SDRAM_CLK = clk28;
+//assign SDRAM_CLK = clk28;
 
 // synchronize sdram state machine with the ras/cas phases of the c16
 reg last_ras;
@@ -331,7 +335,7 @@ wire [7:0] ioctl_data;
 wire [7:0] ioctl_index;
 wire ioctl_downloading;
 
-wire rom_download = ioctl_downloading && ((ioctl_index == 8'h00) || (ioctl_index == 8'h03));
+wire rom_download = ioctl_downloading && ((ioctl_index == 8'h00) || (ioctl_index == kernal_index));
 wire prg_download = ioctl_downloading && (ioctl_index == 8'h01);
 wire tap_download = ioctl_downloading && (ioctl_index == 8'h41);
 
@@ -440,8 +444,8 @@ always @(posedge clk28) begin
 			if(ioctl_addr == 0) ioctl_sdram_addr <= TAP_MEM_START;
 			ioctl_ram_wr <= 1'b1;
 		end else if (rom_download) begin
-			if((ioctl_index == 8'h0 && ioctl_addr == 25'h4000) || (ioctl_index == 8'h3 && ioctl_addr == 0)) ioctl_sdram_addr <= ROM_MEM_START;
-			if((ioctl_index == 8'h0 && ioctl_addr[16:14] != 0) || ioctl_index == 8'h3) ioctl_ram_wr <= 1'b1;
+			if((ioctl_index == 8'h0 && ioctl_addr == 25'h4000) || (ioctl_index == kernal_index && ioctl_addr == 0)) ioctl_sdram_addr <= ROM_MEM_START;
+			if((ioctl_index == 8'h0 && ioctl_addr[16:14] != 0) || ioctl_index == kernal_index) ioctl_ram_wr <= 1'b1;
 		end
 	end
 
@@ -517,7 +521,7 @@ c1530 c1530
     .cass_write(cass_write),
     .cass_motor(cass_motor),
     .cass_sense(cass_sense),
-    .osd_play_stop_toggle(tap_play),
+    .osd_play_stop_toggle(tap_play | ~tape_button_n),
     .ear_input(uart_rxD2)
 );
 
@@ -602,24 +606,51 @@ always @(negedge clk28) begin
 		rom_dl_data  <= ioctl_data;
 		rom_dl_addr  <= ioctl_addr[13:0];
 		c1541_dl_wr  <= ioctl_addr[16:14] == 3'd0 && ioctl_index == 8'h0;
-		kernal_dl_wr <= ioctl_addr[16:14] == 3'd1 || ioctl_index == 8'h3;
+		kernal_dl_wr <= ioctl_addr[16:14] == 3'd1 || ioctl_index == kernal_index;
 		basic_dl_wr  <= ioctl_addr[16:14] == 3'd2 && ioctl_index == 8'h0;
 	end else
 		{ kernal_dl_wr, basic_dl_wr, c1541_dl_wr } <= 0;
 end
 
+
 wire audio_l_out, audio_r_out;
 wire [17:0] sid_audio;
-wire [17:0] audio_data_l = sid_audio + { audio_l_out, tap_sound & ~cass_read, 14'd0 };
-wire [17:0] audio_data_r = sid_audio + { audio_r_out, tap_sound & ~cass_read, 14'd0 };
 
-sigma_delta_dac dac (
-	.clk      ( clk28),
-	.ldatasum ( audio_data_l[17:3] ),
-	.rdatasum ( audio_data_r[17:3] ),
-	.aleft    ( AUDIO_L ),
-	.aright   ( AUDIO_R )
+// TED audio is mono, so we can ignore the right hand channel.
+
+// Since the SID audio output is 18-bit we'll create an 18-bit signal for
+// TED audio and tape, too, for easy mixing.
+
+wire [17:0] c16_audio_raw={{2{audio_l_out}},{2{~audio_l_out}},~(tap_sound & ~cass_read),13'b0};
+
+// Turn the TED pulse train (and cassette sounds) back into a PCM signal
+wire [17:0] c16_audio_filtered;
+iirfilter_mono #(.signalwidth(18),.cbits(9),.immediate(0),.powerup(0)) c16filter
+(
+	.clk(clk28),
+	.reset_n(1'b1),
+	.ena(1'b1),
+	.d(c16_audio_raw),
+	.q(c16_audio_filtered),
 );
+
+// Combine TED and SID into a single PCM stream
+reg [17:0] audio_data;
+always @(posedge clk28)
+	audio_data = sid_audio + {~c16_audio_filtered[17],c16_audio_filtered[16:0]};
+
+// Convert PCM to 1-bit stream
+wire audio_out;
+hybrid_pwm_sd_2ndorder #(.signalwidth(18),.filtersize(4)) dac (
+	.clk(clk28),
+	.reset_n(1'b1),
+	.d_l({!audio_data[17],audio_data[16:0]}),
+	.q_l(audio_out),
+	.d_r(17'b0)
+);
+assign AUDIO_L=audio_out;
+assign AUDIO_R=audio_out;
+
 
 // include the c16 itself
 C16 #(.INTERNAL_ROM(0)) c16 (
@@ -652,6 +683,8 @@ C16 #(.INTERNAL_ROM(0)) c16 (
 //	.PS2CLK  ( ps2_kbd_clk  ),
 	.PS2DAT  ( PS2DAT ),
 	.PS2CLK  ( PS2CLK ),
+	
+	.keys(c64_keys),
 
 	.dl_addr         ( rom_dl_addr ),
 	.dl_data         ( rom_dl_data ),
@@ -703,6 +736,7 @@ wire pll_c16_locked, clk28;
 pll_c16 pll_c16 (
     .inclk0(CLOCK_27),
     .c0(clk28),
+    .c1(SDRAM_CLK),
     .areset(pll_areset),
     .scanclk(pll_scanclk),
     .scandata(pll_scandata),

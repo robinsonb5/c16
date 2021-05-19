@@ -1,6 +1,6 @@
 set sys_clk {guest|pll_c16|altpll_component|auto_generated|pll1|clk[0]}
 set mem_clk {guest|pll_c16|altpll_component|auto_generated|pll1|clk[0]}
-set sdram_clk {guest|pll_c16|altpll_component|auto_generated|pll1|clk[0]}
+set sdram_clk {guest|pll_c16|altpll_component|auto_generated|pll1|clk[1]}
 
 create_generated_clock -name sdram_clk_ext -source [get_pins $sdram_clk] [get_ports $RAM_CLK]
 
@@ -9,6 +9,7 @@ create_generated_clock -name sdram_clk_ext -source [get_pins $sdram_clk] [get_po
 set_clock_groups -asynchronous -group [get_clocks {spiclk}] -group [get_clocks guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]]
 set_clock_groups -asynchronous -group [get_clocks {spiclk}] -group [get_clocks guest|pll_c1541|altpll_component|auto_generated|pll1|clk[*]]
 set_clock_groups -asynchronous -group [get_clocks {guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]}] -group [get_clocks {guest|pll_c1541|altpll_component|auto_generated|pll1|clk[*]}]
+set_clock_groups -asynchronous -group [get_clocks {clocks|altpll_component|auto_generated|pll1|clk[*]}] -group [get_clocks {guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]}]
 
 # Input delays
 
@@ -34,7 +35,7 @@ set_false_path -from [get_ports ${FALSE_IN}]
 # Set Multicycle Path
 #**************************************************************
 
-# set_multicycle_path -from sdram_clk_ext -to [get_clocks $mem_clk] -setup 2
+set_multicycle_path -from sdram_clk_ext -to [get_clocks $mem_clk] -setup 2
 
 set_multicycle_path -to $VGA_OUT -setup 2
 set_multicycle_path -to $VGA_OUT -hold 1

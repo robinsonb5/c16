@@ -61,6 +61,7 @@ module C16 (
 	
 	input PS2DAT,
 	input PS2CLK,
+	input [64:0] keys,
 	
 	output IEC_DATAOUT,
 	input IEC_DATAIN,
@@ -229,6 +230,7 @@ ps2receiver ps2rcv(
 
 c16_keymatrix keyboard(
 	 .clk(CLK28),
+	 .keys(keys),
     .scancode(keyscancode),
     .receiveflag(keyreceived),
 	 .row(keyboard_row),
@@ -318,47 +320,81 @@ always @(posedge CLK28) begin
 	end
 end
 
+
 // valid adresses for SID: FD40-FD5F and FE80-FE9F
+//wire cs_sid = SID_TYPE && ((c16_addr[15:5] == 'b1111_1101_010) || (c16_addr[15:5] == 'b1111_1110_100));
+
+//wire  [7:0] sid8580_data;
+//wire [15:0] sid8580_audio;
+//
+//sid8580 sid8580
+//(
+//	.reset(sreset),
+//	.clk32(CLK28),
+//	.clk_1MHz(sid_clk_en),
+//
+//	.cs(cs_sid),
+//	.we(~RW),
+//	.addr(c16_addr[4:0]),
+//	.data_in(c16_data),
+//	.data_out(sid8580_data),
+//
+//	.extfilter_en(1),
+//	.audio_data(sid8580_audio)
+//);
+//
+//wire  [7:0] sid6581_data;
+//wire [17:0] sid6581_audio;
+//
+//
+//sid_top #(.g_num_voices(3)) sid6581
+//(
+//	.reset(sreset),
+//	.clock(CLK28),
+//	.start_iter(sid_clk_en),
+//
+//	.wren(~RW & cs_sid),
+//	.addr({ 3'd0, c16_addr[4:0] }),
+//	.wdata(c16_data),
+//	.rdata(sid6581_data),
+//
+//	.extfilter_en(1),
+//	.sample_left(sid6581_audio)
+//);
+
+//assign      SID_AUDIO = SID_TYPE[0] ? sid6581_audio : (SID_TYPE[1] ? { sid8580_audio, 2'd0 } : 18'd0);
+//wire  [7:0] sid_data  = (cs_sid & RW) ? (SID_TYPE[0] ? sid6581_data : sid8580_data) : 8'hFF;
+
 wire cs_sid = SID_TYPE && ((c16_addr[15:5] == 'b1111_1101_010) || (c16_addr[15:5] == 'b1111_1110_100));
-
-wire  [7:0] sid8580_data;
-wire [15:0] sid8580_audio;
-
-sid8580 sid8580
-(
-	.reset(sreset),
-	.clk32(CLK28),
-	.clk_1MHz(sid_clk_en),
-
-	.cs(cs_sid),
-	.we(~RW),
-	.addr(c16_addr[4:0]),
-	.data_in(c16_data),
-	.data_out(sid8580_data),
-
-	.extfilter_en(1),
-	.audio_data(sid8580_audio)
-);
-
 wire  [7:0] sid6581_data;
 wire [17:0] sid6581_audio;
 
-sid_top #(.g_num_voices(3)) sid6581
-(
+assign      SID_AUDIO = sid6581_audio;
+wire  [7:0] sid_data  = (cs_sid & RW) ? sid6581_data : 8'hFF;
+
+sid_top #(.MULTI_FILTERS(1),.USE_8580_TABLES(0))
+sid (
 	.reset(sreset),
-	.clock(CLK28),
-	.start_iter(sid_clk_en),
+	.clk(CLK28),
+	.ce_1m(sid_clk_en),
 
-	.wren(~RW & cs_sid),
+	.we(~RW & cs_sid),
 	.addr({ 3'd0, c16_addr[4:0] }),
-	.wdata(c16_data),
-	.rdata(sid6581_data),
+	.data_in(c16_data),
+	.data_out(sid6581_data),
 
-	.extfilter_en(1),
-	.sample_left(sid6581_audio)
+	.audio_data(sid6581_audio),
+
+	.pot_x(0),
+	.pot_y(0),
+	.ext_in(0),
+	
+	.filter_en(1'b1),
+	.mode(SID_TYPE[1]),
+	.mixctl(2'b00),
+	.cfg(3'b000),
+	.ld_clk(1'b0),
+	.ld_wr(1'b0)
 );
-
-assign      SID_AUDIO = SID_TYPE[0] ? sid6581_audio : (SID_TYPE[1] ? { sid8580_audio, 2'd0 } : 18'd0);
-wire  [7:0] sid_data  = (cs_sid & RW) ? (SID_TYPE[0] ? sid6581_data : sid8580_data) : 8'hFF;
 
 endmodule

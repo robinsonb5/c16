@@ -1610,7 +1610,10 @@ assign data_out=(datahold)?dataout_reg:8'hff;
 // TED audio generator
 //--------------------------------------------------------------------------------
 
-assign snd=(ch1audio&ch1pwm)|(ch2audio&ch2pwm);		// mixing audio channel signals
+// AMR - multiplex PWMs instead of or'ing them
+reg sndmux=1'b0;
+always @(posedge clk) sndmux<=!sndmux;
+assign snd=sndmux ? (ch1audio&ch1pwm) : (ch2audio&ch2pwm);		// mixing audio channel signals
 
 
 always @(posedge clk)						//	audio cycle counter divides single clock by 4
@@ -1713,19 +1716,20 @@ assign noise=(ch2noise)?noisegen[0]:1'b0;		// noise signal
 
 // D/A converter
 
+// AMR - made these more linear, since the asymmetry was affecting audio output.
 always @*								// volume value conversion to pwmcounter numbers where PWM signal high value starts
 	begin
 	case (volume)
 		0:		digivolume=31;
-		1:		digivolume=30;
-		2:		digivolume=28;
-		3:		digivolume=26;
-		4:		digivolume=24;
-		5:		digivolume=22;
-		6:		digivolume=20;
-		7:		digivolume=18;
-		8:		digivolume=16;
-		default:	digivolume=16;
+		1:		digivolume=27;
+		2:		digivolume=23;
+		3:		digivolume=19;
+		4:		digivolume=15;
+		5:		digivolume=11;
+		6:		digivolume=7;
+		7:		digivolume=3;
+		8:		digivolume=0;
+		default:	digivolume=0;
 	endcase
 	end
 
