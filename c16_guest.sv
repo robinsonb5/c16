@@ -93,7 +93,7 @@ parameter CONF_STR = {
 localparam ROM_MEM_START = 25'h10000;
 localparam TAP_MEM_START = 25'h20000;
 
-localparam kernal_index= 8'h02; // Temporarily reduced to 2 until disks work
+localparam kernal_index= 8'h03; // Temporarily reduced to 2 while fixing up firmware
 
 reg uart_rxD;
 reg uart_rxD2;

@@ -9,7 +9,8 @@ create_generated_clock -name sdram_clk_ext -source [get_pins $sdram_clk] [get_po
 set_clock_groups -asynchronous -group [get_clocks {spiclk}] -group [get_clocks guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]]
 set_clock_groups -asynchronous -group [get_clocks {spiclk}] -group [get_clocks guest|pll_c1541|altpll_component|auto_generated|pll1|clk[*]]
 set_clock_groups -asynchronous -group [get_clocks {guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]}] -group [get_clocks {guest|pll_c1541|altpll_component|auto_generated|pll1|clk[*]}]
-set_clock_groups -asynchronous -group [get_clocks {clocks|altpll_component|auto_generated|pll1|clk[*]}] -group [get_clocks {guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]}]
+set_clock_groups -asynchronous -group [get_clocks ${hostclk}] -group [get_clocks {guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]}]
+set_clock_groups -asynchronous -group [get_clocks ${supportclk}] -group [get_clocks {guest|pll_c16|altpll_component|auto_generated|pll1|clk[*]}]
 
 # Input delays
 

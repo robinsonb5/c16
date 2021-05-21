@@ -31,5 +31,4 @@ unsigned char joy_keymap[]=
 
 /* Initial ROM */
 const char *bootrom_name="C16     ROM";
-const char bootrom_type=-1;
 

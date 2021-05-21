@@ -153,7 +153,9 @@ COMPONENT c16_guest
 		AUDIO_L  : out std_logic;
 		AUDIO_R  : out std_logic;
 		PS2DAT : in std_logic;
-		PS2CLK : in std_logic
+		PS2CLK : in std_logic;
+		c64_keys : in std_logic_vector(64 downto 0);
+		tape_button_n : in std_logic
 	);
 END COMPONENT;
 
@@ -262,7 +264,9 @@ guest: COMPONENT c16_guest
 		AUDIO_L => sigma_l,
 		AUDIO_R => sigma_r,
 		PS2CLK => ps2_keyboard_clk_in or intercept,
-		PS2DAT => ps2_keyboard_dat_in or intercept
+		PS2DAT => ps2_keyboard_dat_in or intercept,
+		c64_keys => (others=>'1'),
+		tape_button_n => '1'
 );
 
 -- Pass internal signals to external SPI interface

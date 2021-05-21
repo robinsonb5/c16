@@ -372,7 +372,7 @@ wire [17:0] sid6581_audio;
 assign      SID_AUDIO = sid6581_audio;
 wire  [7:0] sid_data  = (cs_sid & RW) ? sid6581_data : 8'hFF;
 
-sid_top #(.MULTI_FILTERS(1),.USE_8580_TABLES(0))
+sid_top #(.MULTI_FILTERS(1),.USE_8580_TABLES(1))
 sid (
 	.reset(sreset),
 	.clk(CLK28),

@@ -169,6 +169,7 @@ sid_filters #(MULTI_FILTERS) filters
 	.ld_wr(ld_wr)
 );
 
+
 sid_tables #(USE_8580_TABLES) sid_tables
 (
 	.clock(clk),
@@ -192,7 +193,6 @@ reg  [11:0] f_acc_t;
 // to allow for table indirection, to reduce BRAM usage.
 always @(posedge clk) begin
 	reg [4:0] state;
-	
 	if(~&state) state <= state + 1'd1;
 	if(ce_1m) state <= 0;
 
