@@ -19,7 +19,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 //
 
-module c16_guest (
+module c16_guest #(parameter PS2=1) (
    input  	 CLOCK_27,
 
 	// LED outputs
@@ -681,9 +681,9 @@ C16 #(.INTERNAL_ROM(0)) c16 (
 	
 //	.PS2DAT  ( ps2_kbd_data ),
 //	.PS2CLK  ( ps2_kbd_clk  ),
-	.PS2DAT  ( PS2DAT ),
-	.PS2CLK  ( PS2CLK ),
-	
+	.PS2DAT  ( PS2 ? PS2DAT : ps2_kbd_data ),
+	.PS2CLK  ( PS2 ? PS2CLK : ps2_kbd_clk ),
+
 	.keys(c64_keys),
 
 	.dl_addr         ( rom_dl_addr ),

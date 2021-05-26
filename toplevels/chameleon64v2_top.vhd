@@ -600,11 +600,6 @@ begin
 
 		-- Joysticks
 
-		-- Core expects buttons in the order START, C, B, A.
-		-- B & C are the most important buttons, so we map them to
-		-- buttons 1 and 2, respectively, with button 3 -> A and 4 -> start.
-		-- We remap them to START, A, A, B, C, so remap here
-
 		joy1 => std_logic_vector(joy1),
 		joy2 => std_logic_vector(joy2),
 		joy3 => std_logic_vector(joy3),
