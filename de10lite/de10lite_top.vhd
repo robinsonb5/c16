@@ -275,6 +275,7 @@ sd_clk <= spi_clk_int;
 controller : entity work.substitute_mcu
 	generic map (
 		sysclk_frequency => 500,
+		SPI_INTERNALBIT=> 2,	-- The C16 core's too slow to receive ROM data at full speed
 		debug => true
 	)
 	port map (

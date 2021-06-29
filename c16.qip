@@ -25,3 +25,4 @@ set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) T65/T65.qip
 set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) sid_new/sid.qip ]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) debounce.vhd ]
 set_global_assignment -name SDC_FILE [file join $::quartus(qip_path) constraints.sdc ]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) demistify_config_pkg.vhd ]

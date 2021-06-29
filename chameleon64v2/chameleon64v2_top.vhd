@@ -569,6 +569,7 @@ begin
 	controller : entity work.substitute_mcu
 	generic map (
 		sysclk_frequency => 500,
+		SPI_INTERNALBIT=>2,
 		debug => false
 	)
 	port map (
