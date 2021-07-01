@@ -1,8 +1,8 @@
 C16 for MIST
 MiST port by Till Harbaum
 
-Partial port to Chameleon64 by Alastair M. Robinson
-(No D64 support yet)
+Integration of updated SID component from MiSTer and
+port to Turbo Chameleon 64 by Alastair M. Robinson
 
 This is the source code of the MIST port of the FPGATED project. The MIST
 port has the follwing changes over the original version:

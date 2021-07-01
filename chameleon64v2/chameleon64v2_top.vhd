@@ -271,16 +271,6 @@ architecture rtl of chameleon64v2_top is
 	signal portb_start : std_logic;
 	signal portb_select : std_logic;
 
-	COMPONENT throbber
-	PORT
-	(
-		clk		:	 IN STD_LOGIC;
-		reset_n		:	 IN STD_LOGIC;
-		q		:	 OUT STD_LOGIC
-	);
-	END COMPONENT;
-	signal act_led : std_logic;
-
 	signal intercept : std_logic;
 
 begin
@@ -614,16 +604,8 @@ begin
 		intercept => intercept
 	);
 
-pulseleds : COMPONENT throbber
-PORT map
-(
-	clk => clk_50,
-	reset_n => reset_btn,
-	q => act_led
-);
-
-led_red<=act_led and not spi_ss4;
-led_green<=(not act_led) and not spi_ss4;
+led_red<='1';
+led_green<='1';
 
 -- Widen the miniscule pulses from the C64 restore key, to make it useful.
 process(clk_100)

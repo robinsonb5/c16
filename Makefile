@@ -19,7 +19,7 @@ $(DEMISTIFYPATH)/site.mk: $(SUBMODULES)
 
 include $(DEMISTIFYPATH)/site.mk
 
-$(SUBMODULES): $(DEMISTIFYPATH)/EightThirtyTwo/lib832/lib832.a
+$(SUBMODULES):
 	git submodule update --init --recursive
 	make -C $(DEMISTIFYPATH) -f bootstrap.mk
 
@@ -46,7 +46,9 @@ tns:
 		grep -r Design-wide\ TNS $$BOARD/*.rpt; \
 	done
 
-.PHONY: mist
-mist:
-	$(Q13)/quartus_sh --flow compile c16_mist.qpf
+# MiST is now covered by the framework, with a thin wrapper
+#.PHONY: mist
+#mist:
+#	@echo -n "Compiling $(PROJECT) for mist... "
+#	@$(Q13)/quartus_sh >compile.log --flow compile c16_mist.qpf
 

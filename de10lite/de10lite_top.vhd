@@ -159,16 +159,6 @@ COMPONENT c16_guest
 	);
 END COMPONENT;
 
-COMPONENT throbber
-	PORT
-	(
-		clk		:	 IN STD_LOGIC;
-		reset_n		:	 IN STD_LOGIC;
-		q		:	 OUT STD_LOGIC
-	);
-END COMPONENT;
-signal act_led : std_logic;
-
 begin
 
 HEX0<=(others=>'1');
@@ -313,17 +303,8 @@ controller : entity work.substitute_mcu
 		intercept => intercept
 );
 
-
-pulseleds : COMPONENT throbber
-PORT map
-(
-	clk => MAX10_CLK1_50,
-	reset_n => KEY(0),
-	q => act_led
-);
-
-LEDR(0)<=act_led and not spi_ss4;
-LEDR(1)<=(not act_led) and not spi_ss4;
+LEDR(0)<='1';
+LEDR(1)<='1';
 
 end rtl;
 

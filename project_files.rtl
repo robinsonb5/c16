@@ -1,5 +1,5 @@
 # files inherited from the guest core:
-c16.qip
+rtl/c16.qip
 
 # The controller module
 DeMiSTify/controller/controller.qip
@@ -8,5 +8,6 @@ DeMiSTify/controller/controller.qip
 firmware/controller_rom1_byte.vhd
 firmware/controller_rom2_byte.vhd
 
-throbber.v
+# Pre-flow scripts
+rtl/build_id_verilog.tcl
 
