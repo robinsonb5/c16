@@ -66,6 +66,12 @@ c16_guest #(.PS2(0)) guest
 	.tape_button_n(1'b1),
 	.PS2CLK(1'b1),
 	.PS2DAT(1'b1),
+	.iec_atn_i(1'b1),
+	.iec_data_i(1'b1),
+	.iec_clk_i(1'b1),
+	.iec_atn_o(),
+	.iec_data_o(),
+	.iec_clk_o(),
 	.*
 );
 

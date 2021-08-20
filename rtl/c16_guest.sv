@@ -61,7 +61,13 @@ module c16_guest #(parameter PS2=1) (
 	input PS2CLK,
 	input PS2DAT,
 	input [64:0] c64_keys,
-	input tape_button_n // Active low
+	input tape_button_n, // Active low
+	input iec_atn_i,
+	input iec_data_i,
+	input iec_clk_i,
+	output iec_atn_o,
+	output iec_data_o,
+	output iec_clk_o
 );
 
 // -------------------------------------------------------------------------
@@ -86,6 +92,9 @@ parameter CONF_STR = {
         "O3,Joysticks,Normal,Swapped;",
         "O4,Memory,64k,16k;",
         "O89,SID,Off,6581,8580;",
+`ifdef HAVE_C64_KEYBOARD
+        "OA,Keyboard,C64,C16;",
+`endif
         "T5,Reset;",
         "V",`BUILD_DATE
 };
@@ -118,6 +127,7 @@ wire osd_reset = status[5];
 wire tap_play = status[6];
 wire tap_sound = status[7];
 wire [1:0] sid_type = status[9:8];
+wire c16_keyboard = status[10];
 wire [1:0] buttons;
 
 wire [7:0] js0, js1;
@@ -684,6 +694,7 @@ C16 #(.INTERNAL_ROM(0)) c16 (
 	.PS2DAT  ( PS2 ? PS2DAT : ps2_kbd_data ),
 	.PS2CLK  ( PS2 ? PS2CLK : ps2_kbd_clk ),
 
+	.keys_c16(c16_keyboard),
 	.keys(c64_keys),
 
 	.dl_addr         ( rom_dl_addr ),
@@ -858,13 +869,21 @@ wire c16_iec_atn_o;
 wire c16_iec_data_o;
 wire c16_iec_clk_o;
 
-wire c16_iec_atn_i  = c1541_iec_atn_o;
-wire c16_iec_data_i = c1541_iec_data_o;
-wire c16_iec_clk_i  = c1541_iec_clk_o;
+reg disk_present;
+always @(posedge clk32)
+	disk_present=|img_size;
+
+wire c16_iec_atn_i  = disk_present ? c1541_iec_atn_o : iec_atn_i;
+wire c16_iec_data_i = disk_present ? c1541_iec_data_o : iec_data_i;
+wire c16_iec_clk_i  = disk_present ? c1541_iec_clk_o : iec_clk_i;
 
 wire c1541_iec_atn_o;
 wire c1541_iec_data_o;
 wire c1541_iec_clk_o;
+
+assign iec_atn_o = disk_present ? 1'b1 : c16_iec_atn_o;
+assign iec_data_o = disk_present ? 1'b1 : c16_iec_data_o;
+assign iec_clk_o = disk_present ? 1'b1 : c16_iec_clk_o;
 
 wire c1541_iec_atn_i  = c16_iec_atn_o;
 wire c1541_iec_data_i = c16_iec_data_o;
@@ -875,7 +894,7 @@ c1541_sd c1541_sd (
 	.reset ( reset ),
 
 	.disk_change ( img_mounted ),
-	.disk_mount  ( |img_size ),
+	.disk_mount  ( disk_present ),
 	.disk_num ( 10'd0 ), // always 0 on MiST, the image is selected by the OSD menu
 
 	.iec_atn_i  ( c1541_iec_atn_i  ),

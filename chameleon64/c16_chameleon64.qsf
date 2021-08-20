@@ -18,7 +18,7 @@
 #
 # Quartus II 32-bit
 # Version 13.1.0 Build 162 10/23/2013 SJ Web Edition
-# Date created = 19:42:12  July 02, 2021
+# Date created = 21:12:14  October 02, 2021
 #
 # -------------------------------------------------------------------------- #
 #
@@ -83,7 +83,6 @@ set_global_assignment -name LL_ROOT_REGION ON -section_id "Root Region"
 set_global_assignment -name LL_MEMBER_STATE LOCKED -section_id "Root Region"
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name AUTO_SHIFT_REGISTER_RECOGNITION OFF
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_location_assignment PIN_111 -to red[0]
 set_location_assignment PIN_110 -to red[1]
 set_location_assignment PIN_106 -to red[2]
@@ -283,11 +282,10 @@ set_instance_assignment -name FAST_INPUT_REGISTER ON -to ram_data[3]
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to ram_data[2]
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to ram_data[1]
 set_instance_assignment -name FAST_INPUT_REGISTER ON -to ram_data[0]
-set_global_assignment -name VHDL_FILE ..//chameleon64/chameleon64_top.vhd
-set_global_assignment -name QIP_FILE "../DeMiSTify/Board//chameleon-modules/chameleonv1.qip"
-set_global_assignment -name SDC_FILE ../DeMiSTify/Board//chameleon64/constraints.sdc
-set_global_assignment -name VHDL_FILE ../DeMiSTify/Board//chameleon64/gen_reset.vhd
-set_global_assignment -name QIP_FILE ../DeMiSTify/Board//chameleon64/hostclocks.qip
+set_global_assignment -name QIP_FILE "../DeMiSTify/Board/chameleon-modules/chameleonv1.qip"
+set_global_assignment -name SDC_FILE ../DeMiSTify/Board/chameleon64/constraints.sdc
+set_global_assignment -name VHDL_FILE ../DeMiSTify/Board/chameleon64/gen_reset.vhd
+set_global_assignment -name QIP_FILE ../DeMiSTify/Board/chameleon64/hostclocks.qip
 set_global_assignment -name VERILOG_MACRO "SDRAM_WINBOND=1"
 set_global_assignment -name VERILOG_MACRO "SDRAM_ROWBITS=13"
 set_global_assignment -name VERILOG_MACRO "SDRAM_COLBITS=9"
@@ -296,9 +294,10 @@ set_global_assignment -name VERILOG_MACRO "SDRAM_tCKminCL2=7500"
 set_global_assignment -name VERILOG_MACRO "SDRAM_tRC=55000"
 set_global_assignment -name VERILOG_MACRO "SDRAM_tWR=2"
 set_global_assignment -name VERILOG_MACRO "SDRAM_tRP=15000"
+set_global_assignment -name QIP_FILE top.qip
 set_global_assignment -name QIP_FILE ../rtl/c16.qip
 set_global_assignment -name QIP_FILE ../DeMiSTify/controller/controller.qip
 set_global_assignment -name VHDL_FILE ../firmware/controller_rom1_byte.vhd
 set_global_assignment -name VHDL_FILE ../firmware/controller_rom2_byte.vhd
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:../rtl/build_id_verilog.tcl"
-set_global_assignment -name QIP_FILE ../chameleon64/plls.qip
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -3,6 +3,9 @@
 
 #undef CONFIG_CD
 #define CONFIG_DISKIMG
+#define CONFIG_DISKIMG_UNITS 1
+#undef CONFIG_JOYKEYS
+#undef CONFIG_SENDKEYS
 
 #endif
 

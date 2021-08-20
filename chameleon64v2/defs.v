@@ -1,0 +1,2 @@
+`define HAVE_C64_KEYBOARD
+

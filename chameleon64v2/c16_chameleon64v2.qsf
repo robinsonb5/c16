@@ -18,7 +18,7 @@
 #
 # Quartus Prime
 # Version 18.1.0 Build 625 09/12/2018 SJ Lite Edition
-# Date created = 19:42:18  July 02, 2021
+# Date created = 21:12:15  October 02, 2021
 #
 # -------------------------------------------------------------------------- #
 #
@@ -40,7 +40,7 @@ set_global_assignment -name FAMILY "Cyclone 10 LP"
 set_global_assignment -name DEVICE 10CL025YU256C8G
 set_global_assignment -name TOP_LEVEL_ENTITY chameleon64v2_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.1.0
-set_global_assignment -name PROJECT_CREATION_TIME_DATE "19:42:18  JULY 02, 2021"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:12:15  OCTOBER 02, 2021"
 set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Lite Edition"
 set_global_assignment -name AUTO_MERGE_PLLS OFF
 set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
@@ -68,7 +68,6 @@ set_global_assignment -name SMART_RECOMPILE ON
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT EXTRA
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_location_assignment PIN_B9 -to ba_in
 set_location_assignment PIN_T2 -to blu[0]
 set_location_assignment PIN_R1 -to blu[1]
@@ -534,11 +533,10 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to usart_rts
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to usart_rx
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to usart_tx
 set_instance_assignment -name CURRENT_STRENGTH_NEW 4MA -to vsync_n
-set_global_assignment -name VHDL_FILE ..//chameleon64v2/chameleon64v2_top.vhd
-set_global_assignment -name QIP_FILE "../DeMiSTify/Board//chameleon-modules/chameleonv2.qip"
-set_global_assignment -name SDC_FILE ../DeMiSTify/Board//chameleon64v2/constraints.sdc
-set_global_assignment -name VHDL_FILE ../DeMiSTify/Board//chameleon64/gen_reset.vhd
-set_global_assignment -name QIP_FILE ../DeMiSTify/Board//chameleon64v2/hostclocks.qip
+set_global_assignment -name QIP_FILE "../DeMiSTify/Board/chameleon-modules/chameleonv2.qip"
+set_global_assignment -name SDC_FILE ../DeMiSTify/Board/chameleon64v2/constraints.sdc
+set_global_assignment -name VHDL_FILE ../DeMiSTify/Board/chameleon64/gen_reset.vhd
+set_global_assignment -name QIP_FILE ../DeMiSTify/Board/chameleon64v2/hostclocks.qip
 set_global_assignment -name VERILOG_MACRO "SDRAM_WINBOND=1"
 set_global_assignment -name VERILOG_MACRO "SDRAM_ROWBITS=13"
 set_global_assignment -name VERILOG_MACRO "SDRAM_COLBITS=9"
@@ -547,9 +545,11 @@ set_global_assignment -name VERILOG_MACRO "SDRAM_tCKminCL2=7500"
 set_global_assignment -name VERILOG_MACRO "SDRAM_tRC=60000"
 set_global_assignment -name VERILOG_MACRO "SDRAM_tWR=2"
 set_global_assignment -name VERILOG_MACRO "SDRAM_tRP=15000"
+set_global_assignment -name QIP_FILE top.qip
 set_global_assignment -name QIP_FILE ../rtl/c16.qip
 set_global_assignment -name QIP_FILE ../DeMiSTify/controller/controller.qip
 set_global_assignment -name VHDL_FILE ../firmware/controller_rom1_byte.vhd
 set_global_assignment -name VHDL_FILE ../firmware/controller_rom2_byte.vhd
 set_global_assignment -name PRE_FLOW_SCRIPT_FILE "quartus_sh:../rtl/build_id_verilog.tcl"
-set_global_assignment -name QIP_FILE ../chameleon64v2/plls.qip
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -1,6 +1,9 @@
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) chameleon64_top.vhd ]
 set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) pll_c1541.qip ]
 set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) pll_c16.qip ]
 set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) rom_reconfig_pal.qip ]
 set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) rom_reconfig_ntsc.qip ]
 set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) pll_reconfig.qip ]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) defs.v ]
+
 

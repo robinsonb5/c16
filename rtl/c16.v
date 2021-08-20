@@ -61,6 +61,8 @@ module C16 (
 	
 	input PS2DAT,
 	input PS2CLK,
+	
+	input	keys_c16,
 	input [64:0] keys,
 	
 	output IEC_DATAOUT,
@@ -230,6 +232,7 @@ ps2receiver ps2rcv(
 
 c16_keymatrix keyboard(
 	 .clk(CLK28),
+	 .keys_c16(keys_c16),
 	 .keys(keys),
     .scancode(keyscancode),
     .receiveflag(keyreceived),

@@ -28,6 +28,7 @@
 
 module c16_keymatrix(
 	 input clk,
+	 input keys_c16,
     input [64:0] keys,
     input [7:0] scancode,
     input receiveflag,
@@ -195,11 +196,11 @@ wire [7:0] realkeys[8];
 reg [7:0] realkeys_reg;
 
 assign keys_remapped[63:58] = keys[63:58];
-assign keys_remapped[57] = keys[57]&keys[38];
+assign keys_remapped[57] = keys_c16 ? keys[57] : keys[57]&keys[38];
 assign keys_remapped[56:39] = keys[56:39];
-assign keys_remapped[38] = keys[15];
+assign keys_remapped[38] = keys_c16 ? keys[38] : keys[15];
 assign keys_remapped[37:16] = keys[37:16];
-assign keys_remapped[15] = keys[64];
+assign keys_remapped[15] = keys_c16 ? keys[15] : keys[64];
 assign keys_remapped[14:0] = keys[14:0];
 
 always @(posedge clk)
